@@ -1,0 +1,97 @@
+﻿1、编写LED驱动程序
+创建字符设备/dev/led-------------》【重点】需要修改chmod 666 /dev/led 权限，否则fd返回值为-1
+修改Makefile
+obj-y +=4412_led.o 
+
+打印log如下:
+<4>[  157.536593] zhch debug [tiny4412_led_ioctl](58)0 1
+<4>[  157.536756] zhch debug [tiny4412_led_ioctl](58)1 1
+<4>[  157.536866] zhch debug [tiny4412_led_ioctl](58)2 1
+<4>[  157.536978] zhch debug [tiny4412_led_ioctl](58)3 1
+<4>[  158.074339] zhch debug [tiny4412_led_ioctl](58)0 0
+<4>[  158.074490] zhch debug [tiny4412_led_ioctl](58)1 0
+<4>[  158.074584] zhch debug [tiny4412_led_ioctl](58)2 0
+<4>[  158.074676] zhch debug [tiny4412_led_ioctl](58)3 0
+
+
+2、修改hardcontrolJNI 
+HardControl.c----》libhardcontrol.so
+在HardControl.c
+添加open("/dev/led", O_RDWR)/
+close(fd)/
+ioctl(fd, status, which);
+
+
+打印log如下:
+12-25 06:44:50.066 3870-3870/com.example.administrator.app_0001_leddemo I/hardcontrolJNI: [ledCtrl](36) ledCtrl(0, 1),fd =22, ret = 0
+12-25 06:44:50.066 3870-3870/com.example.administrator.app_0001_leddemo I/hardcontrolJNI: [ledCtrl](36) ledCtrl(1, 1),fd =22, ret = 0
+12-25 06:44:50.066 3870-3870/com.example.administrator.app_0001_leddemo I/hardcontrolJNI: [ledCtrl](36) ledCtrl(2, 1),fd =22, ret = 0
+12-25 06:44:50.066 3870-3870/com.example.administrator.app_0001_leddemo I/hardcontrolJNI: [ledCtrl](36) ledCtrl(3, 1),fd =22, ret = 0
+12-25 06:44:50.604 3870-3870/com.example.administrator.app_0001_leddemo I/hardcontrolJNI: [ledCtrl](36) ledCtrl(0, 0),fd =22, ret = 0
+12-25 06:44:50.604 3870-3870/com.example.administrator.app_0001_leddemo I/hardcontrolJNI: [ledCtrl](36) ledCtrl(1, 0),fd =22, ret = 0
+12-25 06:44:50.604 3870-3870/com.example.administrator.app_0001_leddemo I/hardcontrolJNI: [ledCtrl](36) ledCtrl(2, 0),fd =22, ret = 0
+12-25 06:44:50.604 3870-3870/com.example.administrator.app_0001_leddemo I/hardcontrolJNI: [ledCtrl](36) ledCtrl(3, 0),fd =22, ret = 0
+
+编译命令如下：
+arm-linux-gcc -fPIC -shared hardcontrol.c   -o libhardcontrol.so -I /usr/lib/jvm/java-1.7.0-openjdk-amd64/include/  -nostdlib /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/lib/libc.so -I /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/include/ /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/lib/liblog.so
+
+3、修改MainActivity.java
+
+需要先hardcontrol1.ledOpen();
+后hardcontrol1.ledCtrl();
+
+4、Android系统修改硬件设备访问权限问题,需要重新制作ramdisk.img，【注意：Tiny4412对ramdisk.img进行了头检验】
+
+(1)file查看ramdisk.img类型
+root@Tiny4412:/home/dream/samba/code/AndroidL/android-5.0.2/out/target/product/tiny4412# file ramdisk.img
+ramdisk.img: gzip compressed data, from Unix
+(2)
+解压ramdisk镜像文件
+#mv  ramdisk.img ramdisk.img.gz
+#gunzip ramdisk.img.gz
+#file ramdisk.img
+ramdisk.img: ASCII cpio archive (SVR4 with no CRC)
+(3)
+还原ramdisk镜像文件
+# mkdir ramdisk
+# cd ramdisk/
+# cpio -i -F ../ramdisk.img
+2459 块
+
+(4)修改uevent.rc文件
+
+#Add Tiny4412 device
+/dev/led                  0666   root         root
+
+(5)重新打包ramdisk.img
+#find . | cpio -o -H newc > ../ramdisk.img.unzip
+# file ramdisk.img.unzip 
+ramdisk.img.unzip: ASCII cpio archive (SVR4 with no CRC)
+
+#gzip -c ./ramdisk.img.unzip  > ./ramdisk.img.gz
+#mv ramdisk.img.gz ramdisk.img
+# file ramdisk.img
+ramdisk.img: gzip compressed data, was "ramdisk.img.unzip", from Unix, last modified: Sun Dec 25 17:15:13 2016
+
+(6)使用mkimage打标签
+#mkimage -A arm -O linux -T ramdisk -C none -a 0x40800000 -n "ramdisk" -d out/target/product/tiny4412/ramdisk.img tiny4412_ramdisk.img
+
+(7)重新刷ramdisk.img到板子
+查看/dev/led权限
+root@tiny4412:/dev # ls -al led
+crw-rw-rw- root     root     253,   0 2016-12-25 09:23 led
+
+参考文档：
+http://blog.csdn.net/michaelpengcn/article/details/8330905
+http://www.cnblogs.com/LoongEmbedded/p/5298388.html
+
+【注意：4412对ramdisk.img进行了打标签】
+out/host/linux-x86/bin/mkbootfs out/target/product/tiny4412/root | out/host/linux-x86/bin/minigzip > out/target/product/tiny4412/ramdisk.img
+mkimage -A arm -O linux -T ramdisk -C none -a 0x40800000 -n "ramdisk" -d out/target/product/tiny4412/ramdisk.img tiny4412_ramdisk.img
+
+5、./gen-img.sh: 行 31: mkimage: 未找到命令
+解决：
+如果你之前编译过 UBoot，可以在 UBoot 的 tools 目录下找到这个程序，也可以通过 apt-get 来安装它：sudo apt-get install u-boot-tools
+
+
+

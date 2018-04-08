@@ -1,0 +1,95 @@
+﻿1、未添加libhardcontrol.so库。
+
+12-24 22:24:41.139 10669-10669/com.example.administrator.app_0001_leddemo E/AndroidRuntime: FATAL EXCEPTION: main
+                                                                                            Process: com.example.administrator.app_0001_leddemo, PID: 10669
+                                                                                            java.lang.UnsatisfiedLinkError: dalvik.system.PathClassLoader[DexPathList[[zip file "/data/app/com.example.administrator.app_0001_leddemo-1/base.apk"],nativeLibraryDirectories=[/data/app/com.example.administrator.app_0001_leddemo-1/lib/arm64, /vendor/lib64, /system/lib64]]] couldn't find "libhardcontrol.so"
+                                                                                                at java.lang.Runtime.loadLibrary(Runtime.java:367)
+                                                                                                at java.lang.System.loadLibrary(System.java:1076)
+                                                                                                at com.example.administrator.hardlibrary.HardControl.<clinit>(HardControl.java:10)
+                                                                                                at com.example.administrator.app_0001_leddemo.MainActivity$MyButton.onClick(MainActivity.java:58)
+                                                                                                at android.view.View.performClick(View.java:5205)
+                                                                                                at android.view.View$PerformClick.run(View.java:21176)
+                                                                                                at android.os.Handler.handleCallback(Handler.java:739)
+                                                                                                at android.os.Handler.dispatchMessage(Handler.java:95)
+                                                                                                at android.os.Looper.loop(Looper.java:166)
+                                                                                                at android.app.ActivityThread.main(ActivityThread.java:5610)
+                                                                                                at java.lang.reflect.Method.invoke(Native Method)
+                                                                                                at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:732)
+                                                                                                at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:622)
+
+解决：
+（1）在app目录下创建libs/armeabi/下放入libhardcontrol.so动态库。
+（2）在 build.gradle下加入：  
+        sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+ （3）编译选项支持-nostdlib prebuilt/ndk/platforms/*****/libc.so
+dream@Tiny4412:~/samba/code/AndroidL/hal_project/HAL_0001_LED$ arm-linux-gcc -fPIC -shared hardcontrol.c -o libhardcontrol.so -I /usr/lib/jvm/java-1.7.0-openjdk-amd64/include/ -nostdlib /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/lib/libc.so 
+
+
+
+2、问题：hardcontrol.c:4:17: fatal error: log.h: No such file or directory  log.h文件找不到
+
+dream@Tiny4412:~/samba/code/AndroidL/hal_project/HAL_0001_LED$ arm-linux-gcc -fPIC -shared hardcontrol.c  -o libhardcontrol.so -I /usr/lib/jvm/java-1.7.0-openjdk-amd64/include/  -nostdlib /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/lib/libc.so
+hardcontrol.c:4:17: fatal error: log.h: No such file or directory
+compilation terminated.
+
+解决：
+find -name log.h 查找源码制定log.h路径
+./prebuilts/ndk/9/platforms/android-19/arch-arm/usr/include/android/log.h
+./system/core/include/cutils/log.h
+-I /home/dream/samba/code/AndroidL//android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/include/android/log.h
+
+
+arm-linux-gcc -fPIC -shared hardcontrol.c   -o libhardcontrol.so -I /usr/lib/jvm/java-1.7.0-openjdk-amd64/include/  -nostdlib /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/lib/libc.so -I /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/include/ 
+
+
+3、问题failed: dlopen failed: cannot locate symbol "__android_log_print" referenced by "libhardcontrol.so"... 找不到__android_log_print对应的so库 
+12-24 15:21:57.430 4359-4391/com.example.administrator.app_0001_leddemo I/OpenGLRenderer: Initialized EGL, version 1.4
+12-24 15:21:57.432 4359-4391/com.example.administrator.app_0001_leddemo D/OpenGLRenderer: Enabling debug mode 0
+12-24 15:58:52.494 5358-5358/com.example.administrator.app_0001_leddemo E/art: dlopen("/data/app/com.example.administrator.app_0001_leddemo-2/lib/arm/libhardcontrol.so", RTLD_LAZY) failed: dlopen failed: cannot locate symbol "__android_log_print" referenced by "libhardcontrol.so"...
+12-24 15:58:52.495 5358-5358/com.example.administrator.app_0001_leddemo D/AndroidRuntime: Shutting down VM
+                                                                                          
+                                                                                          
+                                                                                          --------- beginning of crash
+12-24 15:58:52.497 5358-5358/com.example.administrator.app_0001_leddemo E/AndroidRuntime: FATAL EXCEPTION: main
+                                                                                          Process: com.example.administrator.app_0001_leddemo, PID: 5358
+                                                                                          java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "__android_log_print" referenced by "libhardcontrol.so"...
+                                                                                              at java.lang.Runtime.loadLibrary(Runtime.java:371)
+                                                                                              at java.lang.System.loadLibrary(System.java:989)
+                                                                                              at com.example.administrator.hardlibrary.HardControl.<clinit>(HardControl.java:10)
+                                                                                              at com.example.administrator.app_0001_leddemo.MainActivity.<init>(MainActivity.java:20)
+                                                                                              at java.lang.reflect.Constructor.newInstance(Native Method)
+                                                                                              at java.lang.Class.newInstance(Class.java:1572)
+                                                                                              at android.app.Instrumentation.newActivity(Instrumentation.java:1065)
+                                                                                              at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2199)
+                                                                                              at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2360)
+                                                                                              at android.app.ActivityThread.access$800(ActivityThread.java:144)
+                                                                                              at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1278)
+                                                                                              at android.os.Handler.dispatchMessage(Handler.java:102)
+                                                                                              at android.os.Looper.loop(Looper.java:135)
+                                                                                              at android.app.ActivityThread.main(ActivityThread.java:5221)
+                                                                                              at java.lang.reflect.Method.invoke(Native Method)
+                                                                                              at java.lang.reflect.Method.invoke(Method.java:372)
+                                                                                              at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:899)
+                                                                                              at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:694)
+
+解决：编译选项增加./prebuilts/ndk/9/platforms/android-19/arch-arm/usr/lib/liblog.so 支持	
+arm-linux-gcc -fPIC -shared hardcontrol.c   -o libhardcontrol.so -I /usr/lib/jvm/java-1.7.0-openjdk-amd64/include/  -nostdlib /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/lib/libc.so -I /home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/include/ 	/home/dream/samba/code/AndroidL/android-5.0.2/prebuilts/ndk/9/platforms/android-19/arch-arm/usr/lib/liblog.so	
+
+5、JNI中如何打印调试信息
+参考：http://blog.csdn.net/sno_guo/article/details/8143050
+http://blog.csdn.net/qiuxiaolong007/article/details/7548580
+
+例子:
+#include <android/log.h>
+
+#ifndef  LOG_TAG  
+#define  LOG_TAG    "hardcontrolJNI"  
+#endif
+
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)  
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__) 																			  
+  

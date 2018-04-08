@@ -1,0 +1,20 @@
+﻿1、
+   LinearLayout.xml
+   Button/CheckBox的使用
+   Button.OnClickListener
+
+   ctrl+shift+空格 补全转换类型
+
+   匿名类 
+    
+   ctrl+i 补全接口的方法
+
+   shfit+F1查看Google文档
+  
+   Toast用法：
+Context context = getApplicationContext();
+CharSequence text = "Hello toast!";
+int duration = Toast.LENGTH_SHORT;
+
+Toast toast = Toast.makeText(context, text, duration);
+toast.show();
