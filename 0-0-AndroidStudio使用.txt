@@ -1,0 +1,7 @@
+1、Android Studio阅读源码
+（1）首先编译整个工程 .setevn  make -j8  ./gen.sh
+（2）mmm development/tools/idegen/
+（3）sh ./development/tools/idegen/idegen.sh
+（4）使用android.ipr和android.imi导入Android Studio工程，同步frameworks、system代码.
+（5）快捷键 Ctrl+Shift N 查找文件 比如systemserver.java handle.java  
+（6）快捷键 Ctrl+Shift+T 异常补全
