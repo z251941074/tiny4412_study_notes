@@ -1,0 +1,154 @@
+﻿1、两种方式访问硬件驱动
+
+（1）JNI直接访问驱动程序
+特点：驱动简单、唯一APP访问
+
+（2）硬件服务访问驱动程序
+特点：驱动较复杂，多个APP访问驱动程序
+
+2、JNI直接访问驱动程序
+APP层：
+APP：{APP+libxxx.so}  <===libxxx.so <---(arm-linux-gcc)----xxx.c
+具体：
+MainActivity.java  
+	import com.example.administrator.hardlibrary.*;
+	HardControl hardcontrol1 = new HardControl();
+	hardcontrol1.ledOpen();
+	hardcontrol1.ledCtrl(0,0);
+	
+HardControl.java
+	public class HardControl {
+    public static native int ledCtrl(int which, int status);
+    public static native int ledOpen();
+    public static native void ledClose();
+    static {
+        try {
+            System.loadLibrary("hardcontrol");   
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+}
+JNI层：
+xxx.c:{open,close,ioctl} <========直接调用底层驱动open,close,ioctl,并注册本地方法。 
+
+static const JNINativeMethod methods[] = {
+		{"ledOpen", "()I",  (void *)ledOpen},
+		{"ledClose", "()V", (void *)ledClose},
+		{"ledCtrl", "(II)I", (void *)ledCtrl},
+};
+
+JNIEXPORT jint  JNICALL JNI_OnLoad(JavaVM* vm, void *reserved) //这是JNI_OnLoad的声明，必须按照这样的方式声明
+{
+JNIEnv* env = NULL; //注册时在JNIEnv中实现的，所以必须首先获取它
+jint result = -1;
+jclass cls;
+
+if((*vm)->GetEnv(vm, (void**)&env, JNI_VERSION_1_4) != JNI_OK) //从JavaVM获取JNIEnv，一般使用1.4的版本
+  return JNI_ERR;
+
+static const char* const kClassName="com/example/administrator/hardlibrary/HardControl";
+
+cls = (*env)->FindClass(env, kClassName); //这里可以找到要注册的类，前提是这个类已经加载到java虚拟机中。 这里说明，动态库和有native方法的类之间，没有任何对应关系。
+if(cls == NULL)
+{
+  printf("cannot get class:%s\n", kClassName);
+  return JNI_ERR;
+}
+if((*env)->RegisterNatives(env, cls,methods, sizeof(methods)/sizeof(methods[0]))!= JNI_OK) //这里就是关键了，把本地函数和一个java类方法关联起来。不管之前是否关联过，一律把之前的替换掉！
+{
+  printf("register native method failed!\n");
+  return JNI_ERR;
+}
+return JNI_VERSION_1_4; //这里很重要，必须返回版本，否则加载会失败。
+}
+
+驱动程序层
+
+3、硬件服务访问驱动程序
+
+APP层：       MainActivity.Java
+		---------------------------
+			ILedService.java    (base/core/java/com/android/os)
+----------------------------------------
+Framework层： 
+				SystemServer.java（base/services/java/com/android/server）
+				|
+                |---System.loadLibrary("android_servers");
+				|
+				|---startOtherServices(); 
+				|		|
+						|
+						|---- vibrator = new VibratorService(context);
+						|----- ServiceManager.addService("vibrator", vibrator);
+						|
+						|
+						|-----.....
+				
+
+			XXXXXXService.java(VibratorService.java)(base/services/core/java/com/android/server)
+				|
+				|
+				|-----调用本地方法。
+					
+				
+JNI层-----------------------------			
+			Onload.cpp (base/services/core/jni) ======》libandroid_servers.so  
+				|
+				|---extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)  
+				|		|
+						|
+						|---- register_android_server_XXXX(env)----注册本地方法(调用libXXXX.so中的基本方法)
+						|		|
+						|		|
+						|		|----jniRegisterNativeMethods(env, "com/android/server/PersistentDataBlockService",sMethods, NELEM(sMethods));
+						|---- register_android_server_XXXX(env)
+						|		|
+						|		|
+						|		|----jniRegisterNativeMethods(env, ""com/android/server/VibratorService",sMethods, NELEM(sMethods));				
+						|.......
+		
+			com_android_server_VibratorService.cpp (base/services/core/jni)
+			com_android_server_UsbDeviceManager.cpp (base/services/core/jni)
+			
+----------------------------------------
+HAL：libXXXXXX.so
+
+		vibrator.c (hardware/libhardware/modules/vibrator)
+		vibrator.c (hardware/libhardware_legacy/vibrator)
+		
+					struct hw_module_t HAL_MODULE_INFO_SYM = {
+					.tag = HARDWARE_MODULE_TAG,
+					.module_api_version = VIBRATOR_API_VERSION,
+					.hal_api_version = HARDWARE_HAL_API_VERSION,
+					.id = VIBRATOR_HARDWARE_MODULE_ID,
+					.name = "Default vibrator HAL",
+					.author = "The Android Open Source Project",
+					.methods = &vibrator_module_methods,
+					};
+		
+		lights.c (device/friendly-arm/common/liblight)
+		
+					/*const */ struct hw_module_t HAL_MODULE_INFO_SYM = {
+					.tag = HARDWARE_MODULE_TAG,
+					.version_major = 1,
+					.version_minor = 0,
+					.id = LIGHTS_HARDWARE_MODULE_ID,
+					.name = "lights Module",
+					.author = "Google, Inc.",
+					.methods = &lights_module_methods,
+					};
+
+----------------------------------------
+Driver：LDE1 Virbrator Breathlight   
+
+----------------------------------------
+硬件			
+
+
+
+
+
+
