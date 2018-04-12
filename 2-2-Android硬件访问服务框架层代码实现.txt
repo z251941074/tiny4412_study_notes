@@ -1,0 +1,37 @@
+﻿1、整体框架
+APP：
+	MainActivity.java
+	----------------
+
+Framework：
+
+	ILedService.aidi   位于 frameworks/base/core/java/android/os/  frameworks/base/Android.mk包含
+
+	SystemServer.java    位于                  frameworks/base/services/java/com/android/server
+		
+		LedService.java   位于                 frameworks/base/services/core/java/com/android/server
+		
+	Onload.cpp
+		
+		com_android_server_LedService.cpp 位于 frameworks/base/services/core/jni
+HAL:
+Kernel:
+
+2、具体的步骤如下：
+（1）
+ILedService.aidi		
+（2）
+mmm frameworks/base
+（3）
+LedService.java
+（4）
+SystemServer.java
+（5）
+Onload.cpp com_android_server_LedService.cpp
+（6）
+mmm frameworks/base
+
+	
+
+
+
