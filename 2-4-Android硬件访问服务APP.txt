@@ -1,0 +1,110 @@
+﻿1、
+（1）import导入import android.os.ILedService;
+（2）创建iLedService变量
+private ILedService iLedService = null;
+iLedService = ILedService.Stub.asInterface(ServiceManager.getService("led"));
+（3）使用iLedService服务的函数，比如ioctl
+
+2、APP如何调用
+（1）包含什么？
+http://blog.csdn.net/helldevil/article/details/51547454
+包含：out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes.jar
+（2）怎么包含？
+
+
+3、
+错误1
+E:\Android_APP\WorkSpace\APP_0001_LEDDemo\app\src\main\java\com\example\administrator\app_0001_leddemo\MainActivity.java
+Error:(9, 18) 错误: 找不到符号
+符号:   类 ILedService
+位置: 程序包 android.os
+Error:(20, 13) 错误: 找不到符号
+符号:   类 ILedService
+位置: 类 MainActivity
+Error:(115, 52) 错误: 找不到符号
+符号:   变量 ServiceManager
+位置: 类 MainActivity
+4 个错误
+Error:(115, 34) 错误: 程序包ILedService不存在
+Incremental compilation of 2 classes completed in 1.668 secs.
+:app:compileDebugJavaWithJavac FAILED
+Error:Execution failed for task ':app:compileDebugJavaWithJavac'.
+> Compilation failed; see the compiler error output for details.
+
+android.os.ServiceManager is a hidden class (i.e., @hide) and hidden classes (even if they are public in the Java sense) are removed from android.jar, hence you get the error when you try to import  ServiceManager. Hidden classes are those that Google does not want to be part of the documented public API.
+
+参考文档：
+http://blog.csdn.net/u013308744/article/details/41959385
+http://blog.csdn.net/helldevil/article/details/51547454
+解决；
+1、out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes.jar
+2、FILE->Project Structure->Dependencies,记住点+号，在class模块中设置为compile--->provided
+
+
+错误2:
+Error:(31, 32) 错误: 找不到符号
+符号:   方法 ledCtrl(int,int)
+位置: 类型为ILedService的变量 iLedService
+E:\Android_APP\WorkSpace\APP_0001_LEDDemo\app\src\main\java\com\example\administrator\app_0001_leddemo\MainActivity.java
+Error:(36, 32) 错误: 找不到符号
+符号:   方法 ledCtrl(int,int)
+位置: 类型为ILedService的变量 iLedService
+Error:(48, 32) 错误: 找不到符号
+符号:   方法 ledCtrl(int,int)
+位置: 类型为ILedService的变量 iLedService
+Error:(43, 32) 错误: 找不到符号
+符号:   方法 ledCtrl(int,int)
+位置: 类型为ILedService的变量 iLedService
+
+解决：
+iLedService.ledCtrl(0,0); 函数拼写错误
+修改为：
+iLedService.LedCtrl(0,0);
+
+错误3：
+E:\Android_APP\WorkSpace\APP_0001_LEDDemo\app\src\main\java\com\example\administrator\app_0001_leddemo\MainActivity.java
+Error:(108, 40) 错误: 未报告的异常错误RemoteException; 必须对其进行捕获或声明以便抛出
+Error:(119, 40) 错误: 未报告的异常错误RemoteException; 必须对其进行捕获或声明以便抛出
+Error:(72, 40) 错误: 未报告的异常错误RemoteException; 必须对其进行捕获或声明以便抛出
+Error:(77, 40) 错误: 未报告的异常错误RemoteException; 必须对其进行捕获或声明以便抛出
+Error:(84, 40) 错误: 未报告的异常错误RemoteException; 必须对其进行捕获或声明以便抛出
+Error:(89, 40) 错误: 未报告的异常错误RemoteException; 必须对其进行捕获或声明以便抛出
+解决：CTRL+ALT+T 补全异常
+                    try {
+                        iLedService.LedCtrl(0,1);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+
+错误4：
+Error:java.lang.OutOfMemoryError: GC overhead limit exceeded
+Error:UNEXPECTED TOP-LEVEL ERROR:
+Error:	at java.io.DataInputStream.<init>(DataInputStream.java:59)
+Error:	at com.android.dx.util.ByteArray$MyDataInputStream.<init>(ByteArray.java:356)
+Error:	at com.android.dx.util.ByteArray.makeDataInputStream(ByteArray.java:260)
+Error:	at com.android.dx.cf.direct.StdAttributeFactory.localVariableTable(StdAttributeFactory.java:517)
+Error:	at com.android.dx.cf.direct.StdAttributeFactory.parseLocalVariables(StdAttributeFactory.java:565)
+
+解决：加入
+android {
+..............
+      dexOptions {
+            incremental true
+            javaMaxHeapSize "4g"
+        }
+...............
+}
+参考文档：
+http://stackoverflow.com/questions/25013638/android-studio-google-jar-causing-gc-overhead-limit-exceeded-error
+http://www.mobibrw.com/2015/2631
+
+错误5：
+Error:The number of method references in a .dex file cannot exceed 64K.
+Learn how to resolve this issue at https://developer.android.com/tools/building/multidex.html
+:app:transformClassesWithDexForDebug FAILED
+Error:Execution failed for task ':app:transformClassesWithDexForDebug'.
+> com.android.build.api.transform.TransformException: java.lang.RuntimeException: com.android.ide.common.process.ProcessException: java.util.concurrent.ExecutionException: com.android.ide.common.process.ProcessException: org.gradle.process.internal.ExecException: Process 'command 'C:\Java\jdk1.8.0_112\bin\java.exe'' finished with non-zero exit value 2
+
+
+解决：https://developer.android.com/tools/building/multidex.html
+
