@@ -1,0 +1,116 @@
+﻿1、引入HAL层，解决JNI层直接操作硬件的问题。
+HAL优点：
+（1）抽取统一的接口。对于某些硬件驱动厂商不开源，只提供so库即可。
+（2）便于修改，不需要每次都编译system。
+
+2、以light为例说明HAL框架。
+Lights.c (hardware\qcom\display\msm8974\liblight)
+Lights.h (hardware\libhardware\include\hardware)
+（1）定义struct hw_module_t模块
+struct hw_module_t HAL_MODULE_INFO_SYM = {
+    .tag = HARDWARE_MODULE_TAG,
+    .version_major = 1,
+    .version_minor = 0,
+    .id = LIGHTS_HARDWARE_MODULE_ID,  =========》指定模块ID
+    .name = "lights Module",
+    .author = "Google, Inc.",
+    .methods = &lights_module_methods,  ==========》指定hw_module_methods_t模块的方法
+};
+（2） 初始化hw_module_methods_t的open函数指针
+static struct hw_module_methods_t lights_module_methods = {
+    .open =  open_lights,                 ===========》实现模块方法的open函数指针
+};
+（3）实现hw_module_methods_t的open对应的open_lights函数
+static int open_lights(const struct hw_module_t* module, char const* name,
+        struct hw_device_t** device)
+{
+    int (*set_light)(struct light_device_t* dev,
+            struct light_state_t const* state);
+
+    if (0 == strcmp(LIGHT_ID_BACKLIGHT, name))
+        set_light = set_light_backlight;        ======>一个module对应多个设备，此时根据名字判断调用哪个设备的set_light函数，此处是set_light_backlight
+    struct light_device_t *dev = malloc(sizeof(struct light_device_t));   =====》申请struct light_device_t *结构体
+    memset(dev, 0, sizeof(*dev));
+
+    dev->common.tag = HARDWARE_DEVICE_TAG;
+    dev->common.version = 0;
+    dev->common.module = (struct hw_module_t*)module;
+    dev->common.close = (int (*)(struct hw_device_t*))close_lights;
+    dev->set_light = set_light;                                        ==============》   将set_light_backlight赋值给dev->set_light                              
+
+    *device = (struct hw_device_t*)dev;     ==============》将(struct hw_device_t*)dev强制类型赋值给*device
+    return 0;
+}		
+至此，完成从(struct light_device_t *)类型 到  (struct hw_device_t*)类型
+
+（4）完成(struct light_device_t *)的函数指针的实现。
+struct light_device_t {
+    struct hw_device_t common;
+    int (*set_light)(struct light_device_t* dev,
+            struct light_state_t const* state);
+};
+typedef struct hw_device_t {
+    uint32_t tag;
+    uint32_t version;
+#ifdef __LP64__
+    uint64_t reserved[12];
+#else
+    uint32_t reserved[12];
+#endif
+    int (*close)(struct hw_device_t* device);
+} hw_device_t;
+3、分析Framework中JNI层如何调用so库
+参考：com_android_server_lights_LightsService.cpp (frameworks\base\services\core\jni)
+#include <hardware/hardware.h>
+#include <hardware/lights.h>
+（1）JNI本地调用注册
+static JNINativeMethod method_table[] = {
+    { "init_native", "()J", (void*)init_native },
+    { "finalize_native", "(J)V", (void*)finalize_native },
+    { "setLight_native", "(JIIIIII)V", (void*)setLight_native },
+};
+
+int register_android_server_LightsService(JNIEnv *env)
+{
+    return jniRegisterNativeMethods(env, "com/android/server/lights/LightsService",
+            method_table, NELEM(method_table));
+}
+（2）init_native函数，完成light_device_t* lights结构体
+struct Devices {
+    light_device_t* lights[LIGHT_COUNT];
+};
+static jlong init_native(JNIEnv *env, jobject clazz)
+{
+    int err;
+    hw_module_t* module;
+    Devices* devices;         
+    devices = (Devices*)malloc(sizeof(Devices));   
+    err = hw_get_module(LIGHTS_HARDWARE_MODULE_ID, (hw_module_t const**)&module);  =========》hw_get_module根据name,判断获取的module。
+    if (err == 0) {
+        devices->lights[LIGHT_INDEX_BACKLIGHT]
+				= (light_device_t*)module->methods->open(module, LIGHT_ID_BACKLIGHT, &device);  ===》根据module调用module->methods->open函数指针open_lights
+	return (jlong)devices;
+}
+
+（3）在其他本地函数中，完成devices->set_light函数。
+struct light_device_t {
+    struct hw_device_t common;
+    int (*set_light)(struct light_device_t* dev,
+            struct light_state_t const* state);
+};
+
+
+3、实现自己的LED
+
+4、测试
+mmm hardware/hardware
+make snod
+重新烧写system.img userdata.img
+
+
+
+
+
+
+
+
