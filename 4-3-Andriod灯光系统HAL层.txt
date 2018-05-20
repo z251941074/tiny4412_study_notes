@@ -1,0 +1,42 @@
+1、参考Google ligh.c源代码
+本文参考：display-jb-mr1.1-dev-liblight
+
+2、主要实现对背光灯的控制
+(1)熟悉Android HAL层框架逻辑
+
+(2)修改具体业务实现
+设备节点 /dev/blacklight-1ware
+
+(3)修改Android.mk
+
+LOCAL_PATH:= $(call my-dir)
+# HAL module implemenation stored in
+# hw/<COPYPIX_HARDWARE_MODULE_ID>.<ro.board.platform>.so
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := lights.c
+LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+LOCAL_C_INCLUDES :=hardware/libhardware
+LOCAL_SHARED_LIBRARIES := liblog
+LOCAL_MODULE := lights.tiny4412
+LOCAL_MODULE_TAGS := optional
+
+include $(BUILD_SHARED_LIBRARY)
+
+(4)注释掉friendly-arm的so库
+/vendor/friendly-arm/tiny4412/device-tiny4412.mk
+
+ifeq ($(BOARD_USES_PWMLIGHTS),false)
+#PRODUCT_COPY_FILES += \
+#       $(VENDOR_PATH)/proprietary/lights.tiny4412.so:system/lib/hw/lights.tiny4412.so
+endif
+
+
+3、验证
+
+. setenv
+lunch
+mmm hardware/libhardware/modules/lights -B
+diff out/target/product/tiny4412/system/lib/hw/lights.tiny4412.so vendor/friendly-arm/tiny4412/proprietary/lights.tiny4412.so
+./gen-img.sh
+
