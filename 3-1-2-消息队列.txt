@@ -1,0 +1,41 @@
+﻿1、消息队列使用
+参考文档：
+http://blog.csdn.net/snow_lu/article/details/51969197
+2、消息队列模型
+3、消息队列代码分析
+4、
+例程1：主线程负责UI显示，并发送消息  
+       子线程1负责处理消息 
+	   子线程2负责处理消息
+例程2：消息处理实现
+
+5、
+(1)创建MessageQueue:
+Looper.prepare
+
+(2)使用Handler构造、发送Message
+创建
+new Handler
+new Handler(Callback callback)
+new Handler(Looper looper)
+new Handler(Looper looper, Callback callback)
+
+//生成消息
+//Message msg = Message.obtain();
+
+生成消息并发送
+ public final boolean sendMessage(Message msg)
+ public final boolean sendMessageDelayed(Message msg, long delayMillis)
+ public boolean sendMessageAtTime(Message msg, long uptimeMillis)
+ private boolean enqueueMessage(MessageQueue queue, Message msg, long uptimeMillis) 
+
+
+(3)使用Looper循环取出、执行消息里面的处理函数
+// 创建MessageQueue
+   public static void prepare()---> sThreadLocal.set(new Looper(quitAllowed));---> mQueue = new MessageQueue(quitAllowed);
+
+// 处理消息
+   public void dispatchMessage(Message msg) 
+   mCallback.handleMessage(msg)
+
+
