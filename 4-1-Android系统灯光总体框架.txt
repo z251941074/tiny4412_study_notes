@@ -1,58 +1,58 @@
-1¡¢ÕûÌå¿ò¼Ü
+ï»¿1ã€æ•´ä½“æ¡†æž¶
 
-light ÏµÍ³
+light ç³»ç»Ÿ
 
-APP                            ====>µç³ØµÆ¡¢ºôÎüµÆ¡¢Í¨ÖªµÆ¡¢±³¹âµÆ
+APP                            ====>ç”µæ± ç¯ã€å‘¼å¸ç¯ã€é€šçŸ¥ç¯ã€èƒŒå…‰ç¯
 ==============================
 Framework
 
 ==============================
 JNI							   =====>com_android_server_lightservice.cpp
-                               (1)»ñÈ¡hw_module_t
-							   (2)¸ù¾Ýname,µ÷ÓÃmodule->methods->open
+                               (1)èŽ·å–hw_module_t
+							   (2)æ ¹æ®name,è°ƒç”¨module->methods->open
 ==============================
 								=====>light.c
-								(1)ÊµÏÖhw_module_t
-								(2)ÊµÏÖopen,¸ù¾Ýname£¬ÊµÏÖ¶ÔÓ¦µÄset_lightº¯Êý
+								(1)å®žçŽ°hw_module_t
+								(2)å®žçŽ°open,æ ¹æ®nameï¼Œå®žçŽ°å¯¹åº”çš„set_lightå‡½æ•°
 HAL	
 ===============================
 
-                                ÊµÏÖ²»Í¬µÆµÄset_lightº¯Êý¡£
+                                å®žçŽ°ä¸åŒç¯çš„set_lightå‡½æ•°ã€‚
 Driver
 ===============================
 
 
-2¡¢¾ßÌåÊµÏÖ
-2.1 ¿´¹¦ÄÜ
-Í¨ÖªµÆ¡¢µç³ØµÆ----¡·Ó²¼þÊÇÍ¬Ò»¸ö£¬ÑÕÉ«£¬ÉÁË¸
-±³¹âµÆ----¡·µ÷½ÚLCD±³¹âÁÁ¶È
-2.2 Ð´Çý¶¯
-Í¨ÖªµÆ----¡·²Ù×÷LED
-±³¹âµÆ----¡·PWM¿ØÖÆ
-2.3 HAL²ã
+2ã€å…·ä½“å®žçŽ°
+2.1 çœ‹åŠŸèƒ½
+é€šçŸ¥ç¯ã€ç”µæ± ç¯----ã€‹ç¡¬ä»¶æ˜¯åŒä¸€ä¸ªï¼Œé¢œè‰²ï¼Œé—ªçƒ
+èƒŒå…‰ç¯----ã€‹è°ƒèŠ‚LCDèƒŒå…‰äº®åº¦
+2.2 å†™é©±åŠ¨
+é€šçŸ¥ç¯----ã€‹æ“ä½œLED
+èƒŒå…‰ç¯----ã€‹PWMæŽ§åˆ¶
+2.3 HALå±‚
 
-3¡¢ÈÎÎñ
-Ä¿µÄ£ºÊµÏÖapkÍ¨ÓÃÐÔ
-·ÖÎö£ºapkµ÷ÓÃÍ¨ÓÃµÄ½Ó¿Ú£¬Òò´ËÒª±£³Ö½Ó¿ÚµÄÒ»ÖÂÐÔ£¬Òò´Ë¿ò¼Ü²ã£¨JAVA£©ÊÇ²»ÄÜÐÞ¸ÄµÄ¡£
-Òò´Ë±¾²¿·ÖÖ»ÖØÐ´¿ò¼Ü²ã£¨JNI²ã£©ºÍHAL²ã¡£
-3.1 ·ÖÎöJNI²ã
-£¨1£©»ñÈ¡module
-£¨2£©¸ù¾Ýname£¬´ÓmoduleÖÐ»ñÈ¡light_device_t*
+3ã€ä»»åŠ¡
+ç›®çš„ï¼šå®žçŽ°apké€šç”¨æ€§
+åˆ†æžï¼šapkè°ƒç”¨é€šç”¨çš„æŽ¥å£ï¼Œå› æ­¤è¦ä¿æŒæŽ¥å£çš„ä¸€è‡´æ€§ï¼Œå› æ­¤æ¡†æž¶å±‚ï¼ˆJAVAï¼‰æ˜¯ä¸èƒ½ä¿®æ”¹çš„ã€‚
+å› æ­¤æœ¬éƒ¨åˆ†åªé‡å†™æ¡†æž¶å±‚ï¼ˆJNIå±‚ï¼‰å’ŒHALå±‚ã€‚
+3.1 åˆ†æžJNIå±‚
+ï¼ˆ1ï¼‰èŽ·å–module
+ï¼ˆ2ï¼‰æ ¹æ®nameï¼Œä»Žmoduleä¸­èŽ·å–light_device_t*
 
-3.2·ÖÎöHAL²ã
-£¨1£©¸ù¾Ýname£¬ÊµÏÖ²»Í¬µÄset_lightº¯Êý
-Èç¹ûÊÇLCD±³¹âµÆ,ÔòÐèÏò½ÚµãÐ´±³¹âÖµ¡£
-Èç¹ûÊÇÍ¨ÖªµÆ¡¢µç³ØµÆ£¬ÔòÐèÒª²Ù×÷RGBÈý¸öLED¡£
+3.2åˆ†æžHALå±‚
+ï¼ˆ1ï¼‰æ ¹æ®nameï¼Œå®žçŽ°ä¸åŒçš„set_lightå‡½æ•°
+å¦‚æžœæ˜¯LCDèƒŒå…‰ç¯,åˆ™éœ€å‘èŠ‚ç‚¹å†™èƒŒå…‰å€¼ã€‚
+å¦‚æžœæ˜¯é€šçŸ¥ç¯ã€ç”µæ± ç¯ï¼Œåˆ™éœ€è¦æ“ä½œRGBä¸‰ä¸ªLEDã€‚
 
-4¡¢Âß¼­µÆ
+4ã€é€»è¾‘ç¯
 
-#define LIGHT_ID_BACKLIGHT          "backlight"    ---¡·ÉèÖÃÁÁ¶Èbrightness
-#define LIGHT_ID_KEYBOARD           "keyboard"     ---¡·ÁÁÃð
-#define LIGHT_ID_BUTTONS            "buttons"      ---¡·ÁÁÃð
+#define LIGHT_ID_BACKLIGHT          "backlight"    ---ã€‹è®¾ç½®äº®åº¦brightness
+#define LIGHT_ID_KEYBOARD           "keyboard"     ---ã€‹äº®ç­
+#define LIGHT_ID_BUTTONS            "buttons"      ---ã€‹äº®ç­
 
-#define LIGHT_ID_BATTERY            "battery"      ---¡·ÑÕÉ«color
+#define LIGHT_ID_BATTERY            "battery"      ---ã€‹é¢œè‰²color
 
-#define LIGHT_ID_NOTIFICATIONS      "notifications" ----¡· ÉÁË¸blink
+#define LIGHT_ID_NOTIFICATIONS      "notifications" ----ã€‹ é—ªçƒblink
 #define LIGHT_ID_ATTENTION          "attention"
 
 

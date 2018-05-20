@@ -1,6 +1,6 @@
-Ò»¡¢Ä¿µÄ
-±£³ÖAPKÍ¨ÓÃĞÔ£¬½öÔö¼Ó×Ô¼ºµÄÇı¶¯³ÌĞòÊµÏÖµÆ¹âÏµÍ³¡£
-µÆ¹âÏµÍ³£º
+ï»¿ä¸€ã€ç›®çš„
+ä¿æŒAPKé€šç”¨æ€§ï¼Œä»…å¢åŠ è‡ªå·±çš„é©±åŠ¨ç¨‹åºå®ç°ç¯å…‰ç³»ç»Ÿã€‚
+ç¯å…‰ç³»ç»Ÿï¼š
 APP
 ===============
 framework
@@ -9,31 +9,31 @@ HAL
 ===============
 Driver
 ===============
-Í¨ÖªµÆ¡¢µç³ØµÆ¡¢±³¹âµÆµÈ
+é€šçŸ¥ç¯ã€ç”µæ± ç¯ã€èƒŒå…‰ç¯ç­‰
 
-¶ş¡¢Çı¶¯ÔõÃ´Ğ´
-1.·ÖÎö¹¦ÄÜ
-Í¨ÖªµÆ£ºLEDÉÁË¸
-µç³ØµÆ£ºLED²ãcolor
-±³¹âµÆ£ºLEDÁÁ¶È 
-2¡¢·ÖÎö×Ô´øµÄLEDÇı¶¯Led-class.c
-·ÖÅä£º
+äºŒã€é©±åŠ¨æ€ä¹ˆå†™
+1.åˆ†æåŠŸèƒ½
+é€šçŸ¥ç¯ï¼šLEDé—ªçƒ
+ç”µæ± ç¯ï¼šLEDå±‚color
+èƒŒå…‰ç¯ï¼šLEDäº®åº¦ 
+2ã€åˆ†æè‡ªå¸¦çš„LEDé©±åŠ¨Led-class.c
+åˆ†é…ï¼š
 	struct led_classdev		 cdev;
 	kzalloc(sizeof(struct s3c24xx_gpio_led), GFP_KERNEL);
-ÉèÖÃ£º
+è®¾ç½®ï¼š
 	cdev.brightness_set = s3c24xx_led_set;
 	cdev.name ;
 	cdev.brightness;
 	cdev.max_brightness;
-×¢²á£º
+æ³¨å†Œï¼š
     led_classdev_register(&dev->dev, &led->cdev);
 
-È¡Ïû£º
+å–æ¶ˆï¼š
 	led_classdev_unregister(&led->cdev);
 	kfree(led);
 
-Èı¡¢ÑéÖ¤Çı¶¯
-1.´´½¨class½Úµã
+ä¸‰ã€éªŒè¯é©±åŠ¨
+1.åˆ›å»ºclassèŠ‚ç‚¹
 root@tiny4412:/sys/class/leds # ls
 led5
 led6
@@ -42,15 +42,15 @@ led8
 mmc1::
 mmc2::
 
-2.ÉèÖÃÁÁ¶È
+2.è®¾ç½®äº®åº¦
 root@tiny4412:/ # echo 122 > /sys/class/leds/led5/brightness
 root@tiny4412:/ #
 
-3.»ñÈ¡ÁÁ¶È
+3.è·å–äº®åº¦
 root@tiny4412:/ # cat /sys/class/leds/led5/brightness
 122
 
-4.ÉèÖÃÉÁË¸
+4.è®¾ç½®é—ªçƒ
 root@tiny4412:/ # cat /sys/class/leds/led5/trigger
 [none] mmc0 mmc1 mmc2 timer
 root@tiny4412:/ # echo timer > /sys/class/leds/led5/trigger
@@ -65,22 +65,22 @@ trigger
 uevent
 root@tiny4412:/ #
 
-ËÄ¡¢·ÖÎöLEDÉÁË¸Á÷³Ì
+å››ã€åˆ†æLEDé—ªçƒæµç¨‹
 	__ATTR(trigger, 0644, led_trigger_show, led_trigger_store),
 	
 ssize_t led_trigger_store(struct device *dev, struct device_attribute *attr,
 		const char *buf, size_t count)
-	//1ÉèÖÃnone£¬Ôò±íÊ¾ÒÆ³ıtrigger
+	//1è®¾ç½®noneï¼Œåˆ™è¡¨ç¤ºç§»é™¤trigger
 	if (!strcmp(trigger_name, "none")) {
 		led_trigger_remove(led_cdev);
 		return count;
 	}
-	//2±éÀútrigger_list,ÅĞ¶ÏÉèÖÃµÄtrigger_name£¬Óëtrigger_listÖĞnameÊÇ·ñ´æÔÚ
+	//2éå†trigger_list,åˆ¤æ–­è®¾ç½®çš„trigger_nameï¼Œä¸trigger_listä¸­nameæ˜¯å¦å­˜åœ¨
 	list_for_each_entry(trig, &trigger_list, next_trig) {
 		if (!strcmp(trigger_name, trig->name)) {
 			led_trigger_set(led_cdev, trig);
 		}
-	//3 ÉèÖÃÅĞ¶Ïtrigger->activateÊÇ·ñ´æÔÚ£¬Èç¹û´æÔÚ£¬ÔòLedtrig-timerÖĞµÄtimer_trig_activate
+	//3 è®¾ç½®åˆ¤æ–­trigger->activateæ˜¯å¦å­˜åœ¨ï¼Œå¦‚æœå­˜åœ¨ï¼Œåˆ™Ledtrig-timerä¸­çš„timer_trig_activate
 	void led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trigger)
 	if (trigger) {
 		list_add_tail(&led_cdev->trig_list, &trigger->led_cdevs);
@@ -88,7 +88,7 @@ ssize_t led_trigger_store(struct device *dev, struct device_attribute *attr,
 		if (trigger->activate)
 			trigger->activate(led_cdev);
 	}
-	//4 Éú³Édelay_onÓëdelay_off½Úµã£¬²¢ÉÁË¸
+	//4 ç”Ÿæˆdelay_onä¸delay_offèŠ‚ç‚¹ï¼Œå¹¶é—ªçƒ
 	static void timer_trig_activate(struct led_classdev *led_cdev) {
 	rc = device_create_file(led_cdev->dev, &dev_attr_delay_on);
 	rc = device_create_file(led_cdev->dev, &dev_attr_delay_off);
@@ -96,7 +96,7 @@ ssize_t led_trigger_store(struct device *dev, struct device_attribute *attr,
 	led_blink_set(led_cdev, &led_cdev->blink_delay_on,
 		      &led_cdev->blink_delay_off);
 	}
-	//5 ·ÖÎöled_blink_setÉÁË¸º¯Êı
+	//5 åˆ†æled_blink_seté—ªçƒå‡½æ•°
 	void led_blink_set(struct led_classdev *led_cdev,
 		   unsigned long *delay_on,
 		   unsigned long *delay_off) {
@@ -110,17 +110,17 @@ ssize_t led_trigger_store(struct device *dev, struct device_attribute *attr,
 	led_set_software_blink(led_cdev, *delay_on, *delay_off);
 	}
 	
-	//·ÖÎöLEDÉèÖÃled_delay_on_store¡¢led_delay_off_storeº¯Êı
+	//åˆ†æLEDè®¾ç½®led_delay_on_storeã€led_delay_off_storeå‡½æ•°
 static DEVICE_ATTR(delay_on, 0644, led_delay_on_show, led_delay_on_store);
 static DEVICE_ATTR(delay_off, 0644, led_delay_off_show, led_delay_off_store);
 
 static ssize_t led_delay_on_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
-	//×ª»¯µ½intĞÍ
+	//è½¬åŒ–åˆ°intå‹
 	unsigned long state = simple_strtoul(buf, &after, 10);
-	//ÉÁË¸
+	//é—ªçƒ
 	led_blink_set(led_cdev, &state, &led_cdev->blink_delay_off);
-	//±£´æ²ÎÊıµ½blink_delay_on
+	//ä¿å­˜å‚æ•°åˆ°blink_delay_on
 	led_cdev->blink_delay_on = state;
 }
 	

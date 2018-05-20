@@ -1,13 +1,13 @@
-1¡¢²Î¿¼Google ligh.cÔ´´úÂë
-±¾ÎÄ²Î¿¼£ºdisplay-jb-mr1.1-dev-liblight
+ï»¿1ã€å‚è€ƒGoogle ligh.cæºä»£ç 
+æœ¬æ–‡å‚è€ƒï¼šdisplay-jb-mr1.1-dev-liblight
 
-2¡¢Ö÷ÒªÊµÏÖ¶Ô±³¹âµÆµÄ¿ØÖÆ
-(1)ÊìÏ¤Android HAL²ã¿ò¼ÜÂß¼­
+2ã€ä¸»è¦å®ç°å¯¹èƒŒå…‰ç¯çš„æ§åˆ¶
+(1)ç†Ÿæ‚‰Android HALå±‚æ¡†æ¶é€»è¾‘
 
-(2)ĞŞ¸Ä¾ßÌåÒµÎñÊµÏÖ
-Éè±¸½Úµã /dev/blacklight-1ware
+(2)ä¿®æ”¹å…·ä½“ä¸šåŠ¡å®ç°
+è®¾å¤‡èŠ‚ç‚¹ /dev/blacklight-1ware
 
-(3)ĞŞ¸ÄAndroid.mk
+(3)ä¿®æ”¹Android.mk
 
 LOCAL_PATH:= $(call my-dir)
 # HAL module implemenation stored in
@@ -23,7 +23,7 @@ LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_SHARED_LIBRARY)
 
-(4)×¢ÊÍµôfriendly-armµÄso¿â
+(4)æ³¨é‡Šæ‰friendly-armçš„soåº“
 /vendor/friendly-arm/tiny4412/device-tiny4412.mk
 
 ifeq ($(BOARD_USES_PWMLIGHTS),false)
@@ -32,7 +32,7 @@ ifeq ($(BOARD_USES_PWMLIGHTS),false)
 endif
 
 
-3¡¢ÑéÖ¤
+3ã€éªŒè¯
 
 . setenv
 lunch
