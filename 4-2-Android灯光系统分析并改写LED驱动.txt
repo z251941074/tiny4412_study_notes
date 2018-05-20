@@ -1,0 +1,134 @@
+一、目的
+保持APK通用性，仅增加自己的驱动程序实现灯光系统。
+灯光系统：
+APP
+===============
+framework
+===============
+HAL
+===============
+Driver
+===============
+通知灯、电池灯、背光灯等
+
+二、驱动怎么写
+1.分析功能
+通知灯：LED闪烁
+电池灯：LED层color
+背光灯：LED亮度 
+2、分析自带的LED驱动Led-class.c
+分配：
+	struct led_classdev		 cdev;
+	kzalloc(sizeof(struct s3c24xx_gpio_led), GFP_KERNEL);
+设置：
+	cdev.brightness_set = s3c24xx_led_set;
+	cdev.name ;
+	cdev.brightness;
+	cdev.max_brightness;
+注册：
+    led_classdev_register(&dev->dev, &led->cdev);
+
+取消：
+	led_classdev_unregister(&led->cdev);
+	kfree(led);
+
+三、验证驱动
+1.创建class节点
+root@tiny4412:/sys/class/leds # ls
+led5
+led6
+led7
+led8
+mmc1::
+mmc2::
+
+2.设置亮度
+root@tiny4412:/ # echo 122 > /sys/class/leds/led5/brightness
+root@tiny4412:/ #
+
+3.获取亮度
+root@tiny4412:/ # cat /sys/class/leds/led5/brightness
+122
+
+4.设置闪烁
+root@tiny4412:/ # cat /sys/class/leds/led5/trigger
+[none] mmc0 mmc1 mmc2 timer
+root@tiny4412:/ # echo timer > /sys/class/leds/led5/trigger
+root@tiny4412:/ # ls /sys/class/leds/led5/
+brightness
+delay_off
+delay_on
+max_brightness
+power
+subsystem
+trigger
+uevent
+root@tiny4412:/ #
+
+四、分析LED闪烁流程
+	__ATTR(trigger, 0644, led_trigger_show, led_trigger_store),
+	
+ssize_t led_trigger_store(struct device *dev, struct device_attribute *attr,
+		const char *buf, size_t count)
+	//1设置none，则表示移除trigger
+	if (!strcmp(trigger_name, "none")) {
+		led_trigger_remove(led_cdev);
+		return count;
+	}
+	//2遍历trigger_list,判断设置的trigger_name，与trigger_list中name是否存在
+	list_for_each_entry(trig, &trigger_list, next_trig) {
+		if (!strcmp(trigger_name, trig->name)) {
+			led_trigger_set(led_cdev, trig);
+		}
+	//3 设置判断trigger->activate是否存在，如果存在，则Ledtrig-timer中的timer_trig_activate
+	void led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trigger)
+	if (trigger) {
+		list_add_tail(&led_cdev->trig_list, &trigger->led_cdevs);
+		led_cdev->trigger = trigger;
+		if (trigger->activate)
+			trigger->activate(led_cdev);
+	}
+	//4 生成delay_on与delay_off节点，并闪烁
+	static void timer_trig_activate(struct led_classdev *led_cdev) {
+	rc = device_create_file(led_cdev->dev, &dev_attr_delay_on);
+	rc = device_create_file(led_cdev->dev, &dev_attr_delay_off);
+
+	led_blink_set(led_cdev, &led_cdev->blink_delay_on,
+		      &led_cdev->blink_delay_off);
+	}
+	//5 分析led_blink_set闪烁函数
+	void led_blink_set(struct led_classdev *led_cdev,
+		   unsigned long *delay_on,
+		   unsigned long *delay_off) {
+		if (!*delay_on && !*delay_off){
+#if defined(CONFIG_MACH_IPCAM)
+		*delay_on = *delay_off = 0;
+#else
+		*delay_on = *delay_off = 500;
+#endif
+	}
+	led_set_software_blink(led_cdev, *delay_on, *delay_off);
+	}
+	
+	//分析LED设置led_delay_on_store、led_delay_off_store函数
+static DEVICE_ATTR(delay_on, 0644, led_delay_on_show, led_delay_on_store);
+static DEVICE_ATTR(delay_off, 0644, led_delay_off_show, led_delay_off_store);
+
+static ssize_t led_delay_on_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t size) {
+	//转化到int型
+	unsigned long state = simple_strtoul(buf, &after, 10);
+	//闪烁
+	led_blink_set(led_cdev, &state, &led_cdev->blink_delay_off);
+	//保存参数到blink_delay_on
+	led_cdev->blink_delay_on = state;
+}
+	
+
+
+		
+	
+
+	
+	
+
