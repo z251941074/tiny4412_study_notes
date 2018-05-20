@@ -1,0 +1,12 @@
+1、Key-Value模型
+
+绑定key-Value
+publishLocalService(LightsManager.class, mService);  //注册服务
+
+mLights = LocalServices.getService(LightsManager.class);  //获取服务
+
+
+熟悉ArrayMap中
+get()模型
+put()模型
+
