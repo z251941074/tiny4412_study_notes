@@ -1,0 +1,168 @@
+# tracer: function_graph
+#
+# CPU  DURATION                  FUNCTION CALLS
+# |     |   |                     |   |   |   |
+   1)               |  test_proc_show [proc]() {
+   1)               |    kill_time [proc]() {
+   1)               |      delay_tsc() {
+   1)   ==========> |
+   1)               |        smp_apic_timer_interrupt() {
+   1)               |          irq_enter() {
+   1)   0.090 us    |            rcu_irq_enter();
+   1)   0.518 us    |          }
+   1)   0.042 us    |          exit_idle();
+   1)               |          local_apic_timer_interrupt() {
+   1)               |            hrtimer_interrupt() {
+   1)   0.103 us    |              _raw_spin_lock();
+   1)   0.106 us    |              ktime_get_update_offsets_now();
+   1)               |              __hrtimer_run_queues() {
+   1)   0.333 us    |                __remove_hrtimer();
+   1)               |                tick_sched_timer() {
+   1)   0.051 us    |                  ktime_get();
+   1)   0.028 us    |                  tick_sched_do_timer();
+   1)               |                  tick_sched_handle.isra.15() {
+   1)               |                    update_process_times() {
+   1)               |                      account_process_tick() {
+   1)               |                        account_system_time() {
+   1)   0.149 us    |                          cpuacct_account_field();
+   1)               |                          acct_account_cputime() {
+   1)               |                            __acct_update_integrals() {
+   1)   0.032 us    |                              jiffies_to_timeval();
+   1)   0.361 us    |                            }
+   1)   0.607 us    |                          }
+   1) + 14.723 us   |                        }
+   1) + 14.973 us   |                      }
+   1)   0.030 us    |                      hrtimer_run_queues();
+   1)   0.047 us    |                      raise_softirq();
+   1)               |                      rcu_check_callbacks() {
+   1)   0.028 us    |                        cpu_needs_another_gp();
+   1)   0.067 us    |                        cpu_needs_another_gp();
+   1)   0.842 us    |                      }
+   1)               |                      scheduler_tick() {
+   1)   0.050 us    |                        _raw_spin_lock();
+   1)   0.051 us    |                        update_rq_clock.part.82();
+   1)               |                        task_tick_fair() {
+   1)               |                          update_curr() {
+   1)   0.038 us    |                            update_min_vruntime();
+   1)   0.064 us    |                            cpuacct_charge();
+   1)   0.618 us    |                          }
+   1)   0.029 us    |                          __compute_runnable_contrib();
+   1)   0.029 us    |                          __compute_runnable_contrib();
+   1)               |                          update_cfs_shares() {
+   1)               |                            update_curr() {
+   1)   0.064 us    |                              __calc_delta();
+   1)   0.045 us    |                              update_min_vruntime();
+   1)   0.593 us    |                            }
+   1)   0.051 us    |                            account_entity_dequeue();
+   1)   0.039 us    |                            account_entity_enqueue();
+   1)   1.469 us    |                          }
+   1)   0.168 us    |                          hrtimer_active();
+   1)   0.045 us    |                          update_curr();
+   1)   0.030 us    |                          __compute_runnable_contrib();
+   1)   0.030 us    |                          __compute_runnable_contrib();
+   1)   0.106 us    |                          update_cfs_shares();
+   1)   0.028 us    |                          hrtimer_active();
+   1)   5.069 us    |                        }
+   1)               |                        update_cpu_load_active() {
+   1)               |                          __update_cpu_load() {
+   1)   0.027 us    |                            sched_avg_update();
+   1)   0.327 us    |                          }
+   1)   0.554 us    |                        }
+   1)   0.040 us    |                        calc_global_load_tick();
+   1)               |                        trigger_load_balance() {
+   1)   0.046 us    |                          raise_softirq();
+   1)   0.687 us    |                        }
+   1)   7.995 us    |                      }
+   1)   0.042 us    |                      run_posix_cpu_timers();
+   1) + 25.277 us   |                    }
+   1)   0.047 us    |                    profile_tick();
+   1) + 26.074 us   |                  }
+   1)   0.044 us    |                  hrtimer_forward();
+   1) + 27.092 us   |                }
+   1)   0.036 us    |                _raw_spin_lock();
+   1)   0.473 us    |                enqueue_hrtimer();
+   1) + 29.255 us   |              }
+   1)   0.056 us    |              __hrtimer_get_next_event();
+   1)               |              tick_program_event() {
+   1)               |                clockevents_program_event() {
+   1)   0.043 us    |                  ktime_get();
+   1)   0.812 us    |                  lapic_next_deadline();
+   1)   1.329 us    |                }
+   1)   1.617 us    |              }
+   1) + 32.264 us   |            }
+   1) + 32.635 us   |          }
+   1)               |          irq_exit() {
+   1)               |            __do_softirq() {
+   1)               |              run_timer_softirq() {
+   1)   0.030 us    |                _raw_spin_lock_irq();
+   1)   0.417 us    |              }
+   1)               |              run_rebalance_domains() {
+   1)               |                rebalance_domains() {
+   1)               |                  update_blocked_averages() {
+   1)   0.030 us    |                    _raw_spin_lock_irqsave();
+   1)               |                    update_rq_clock() {
+   1)   0.040 us    |                      update_rq_clock.part.82();
+   1)   0.287 us    |                    }
+   1)   0.042 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.027 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.028 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.028 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.028 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.028 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.030 us    |                    __compute_runnable_contrib();
+   1)   0.027 us    |                    __compute_runnable_contrib();
+   1)   0.029 us    |                    __compute_runnable_contrib();
+   1)   0.028 us    |                    __compute_runnable_contrib();
+   1)   0.028 us    |                    __compute_runnable_contrib();
+   1)   0.027 us    |                    __compute_runnable_contrib();
+   1)   0.028 us    |                    __compute_runnable_contrib();
+   1)   0.038 us    |                    _raw_spin_unlock_irqrestore();
+   1) + 18.027 us   |                  }
+   1)   0.029 us    |                  __msecs_to_jiffies();
+   1) + 18.549 us   |                }
+   1) + 18.808 us   |              }
+   1)   0.045 us    |              rcu_bh_qs();
+   1)   0.031 us    |              __local_bh_enable();
+   1) + 20.301 us   |            }
+   1)   0.029 us    |            idle_cpu();
+   1)   0.050 us    |            rcu_irq_exit();
+   1) + 21.086 us   |          }
+   1) + 56.073 us   |        }
+   1)   <========== |
+   1) # 1984.110 us |      }
+   1)               |      kill_moretime [proc]() {
+   1) # 1984.270 us |        delay_tsc();
+   1) # 1984.905 us |      }
+   1) # 3969.856 us |    }
+   1)               |    seq_printf() {
+   1)   1.089 us    |      seq_vprintf();
+   1)   1.335 us    |    }
+   1) # 3972.142 us |  }
