@@ -1,0 +1,17 @@
+﻿1、
+Ftrace 采用 GCC 的 profile 特性在所有内核函数的开始部分加入一段stub代码，ftrace重载这段代码来实现 trace功能。
+gcc -S hello.c -o hello.S
+gcc -pg -S hello.c -o hello.S
+-pg参数：将在每个函数入口处加入对 mcount 的调用代码call _mcount。
+对比hello.S与hello_pg.S，可知增加 pg 选项后，gcc 在函数 foo 的入口处加入了对 mcount 的调用：call _mcount
+gcc 4.6新增加了-pg -mfentry支持，这样可以在函数的最开始插入一条调用fentry的指令
+
+2、静态与动态ftrace
+
+配置动态ftrace: CONFIG_DYNAMIC_FTRACE=y
+内核编译时会调用一个 recordmcount.pl脚本，将每个函数的地址写入一个特殊的段：__mcount_loc
+在内核初始化的初期，ftrace 查询__mcount_loc段，得到每个函数的入口地址，并将 mcount 替换为 nop 指令。
+(1)mcount 替换为 nop 指令,ftrace 不会对内核性能产生影响。
+(2)当用户打开 ftrace 功能时，ftrace 将这些 nop 指令动态替换为 ftrace_caller，该函数将调用用户注册的 trace 函数
+(3)在function_trace_call()函数内，ftrace记录函数调用堆栈信息，并将结果写入ring buffer稍后，用户可以通过 debugfs的trace文件读取该ring buffer中的内容。
+
