@@ -15,3 +15,147 @@ gcc 4.6新增加了-pg -mfentry支持，这样可以在函数的最开始插入�
 (2)当用户打开 ftrace 功能时，ftrace 将这些 nop 指令动态替换为 ftrace_caller，该函数将调用用户注册的 trace 函数
 (3)在function_trace_call()函数内，ftrace记录函数调用堆栈信息，并将结果写入ring buffer稍后，用户可以通过 debugfs的trace文件读取该ring buffer中的内容。
 
+
+1. Hang的问题 
+使能 
+CONFIG_DETECT_HUNG_TASK=y 
+CONFIG_DEFAULT_HUNG_TASK_TIMEOUT=120 
+这样hang住后，就会crash
+
+2. 
+在复现问题之前，运行如下命令： 
+
+echo 1 > /sys/kernel/debug/tracing/tracing_on
+echo 204800 > /d/tracing/buffer_size_kb
+ 
+echo "" > /d/tracing/set_event
+echo "" > /d/tracing/trace 
+
+echo 1 > /d/tracing/events/f2fs/f2fs_background_gc/enable 
+echo 1 > /d/tracing/events/f2fs/f2fs_gc_begin/enable 
+echo 1 > /d/tracing/events/f2fs/f2fs_gc_end/enable 
+
+echo 1 > /sys/kernel/debug/tracing/tracing_on 
+cat /d/tracing/trace_pipe //在终端上把输出的所有log记录下来 
+
+出问题后应该死机，提供dump, vmliux还有终端保留下输出的ftrace log
+
+3、
+trace、trace_pipe和snapshot的区别？
+
+trace是从RingBuffer中取出内容，
+trace_pipe会一直读取Buffer流。
+
+snapshot是trace的一个瞬间快照
+
+4、
+available_tracers是获取系统支持的Tracer,
+current_tracer是当前使用中的Tracer。
+
+NX609J:/d/tracing # cat available_tracers
+function_graph function nop ---》表明当前可使用的跟踪器未配置，
+需要重新配置在QCOM平台：CONFIG_FUNCTION_TRACE
+X86平台：CONFIG_DYNAMIC_FTRACE=y
+CONFIG_FUNCTION_GRAPH_TRACE=y
+NX609J:/d/tracing # cat current_tracer
+nop
+NX609J:/d/tracing #
+
+hwlat blk mmiotrace function_graph wakeup_dl wakeup_rt wakeup function nop,通常用的最多的就是 function 和 function_graph
+
+#echo function > current_tracer
+#cat current_tracer
+function
+
+相比于 function，function_graph 能让我们更加详细的去知道内核函数的上下文，我们打开 function_graph
+#echo function_graph > current_tracer
+#cat current_tracer
+function_graph
+
+
+5、
+available_events 是系统特定事件进行跟踪，可以找到所有事件
+adb shell "cat /d/tracing/available_events | grep f2fs" > available_events.txt
+
+NX609J:/d/tracing # cat available_events  | grep f2fs
+f2fs:f2fs_destroy_extent_tree
+f2fs:f2fs_shrink_extent_tree
+f2fs:f2fs_update_extent_tree_range
+f2fs:f2fs_lookup_extent_tree_end
+f2fs:f2fs_lookup_extent_tree_start
+f2fs:f2fs_issue_flush
+f2fs:f2fs_issue_discard
+f2fs:f2fs_write_checkpoint
+....
+f2fs:f2fs_get_victim
+f2fs:f2fs_background_gc
+f2fs:f2fs_iget
+f2fs:f2fs_sync_fs
+f2fs:f2fs_sync_file_exit
+f2fs:f2fs_sync_file_enter
+
+
+event是分组列出支持那些事件：
+adb shell "ls /d/tracing/events/f2fs" > 1.txt
+
+NX609J:/d/tracing/events/f2fs # ls
+enable                   f2fs_iget_exit ....
+f2fs_background_gc       f2fs_issue_discard
+f2fs_commit_inmem_page   f2fs_issue_flush
+f2fs_destroy_extent_tree f2fs_lookup_extent_tree_end
+f2fs_direct_IO_enter     f2fs_lookup_extent_tree_start
+f2fs_direct_IO_exit      f2fs_map_blocks
+f2fs_do_write_data_page  f2fs_new_inode
+f2fs_evict_inode         f2fs_readpage
+f2fs_fallocate           f2fs_readpages
+f2fs_get_victim          f2fs_register_inmem_page
+f2fs_iget                f2fs_reserve_new_block
+
+启用特定event，如‘f2fs_sync_fs’，简单的echo到 /sys/kernel/debug/tracing/set_event。例如：
+NX609J:/sys/kernel/debug/tracing # echo f2fs_sync_fs  >> set_event
+
+NX609J:/sys/kernel/debug/tracing # echo ！f2fs_sync_fs  >> set_event
+
+6、
+子系统总开关，使能f2fs subsystem中的所有event事件：
+NX609J:/sys/kernel/debug/tracing/events/f2fs # echo 1 > enable
+NX609J:/sys/kernel/debug/tracing/events/f2fs # cat enable
+
+子系统下的函数分开关,继续查看f2fs_sync_fs的enable已经被设置为1
+NX609J:/sys/kernel/debug/tracing/events/f2fs/f2fs_sync_fs # ls
+enable filter format id trigger
+NX609J:/sys/kernel/debug/tracing/events/f2fs/f2fs_sync_fs # cat enable
+1
+
+继续查看f2fs_sync_fs的formate格式
+NX609J:/sys/kernel/debug/tracing/events/f2fs/f2fs_sync_fs # cat format
+name: f2fs_sync_fs
+ID: 441
+format:
+        field:unsigned short common_type;       offset:0;       size:2; signed:0;
+        field:unsigned char common_flags;       offset:2;       size:1; signed:0;
+        field:unsigned char common_preempt_count;       offset:3;       size:1; signed:0;
+        field:int common_pid;   offset:4;       size:4; signed:1;
+
+        field:dev_t dev;        offset:8;       size:4; signed:0;
+        field:int dirty;        offset:12;      size:4; signed:1;
+        field:int wait; offset:16;      size:4; signed:1;
+
+print fmt: "dev = (%d,%d), superblock is %s, wait = %d", ((unsigned int) ((REC->dev) >> 20)), ((unsigned int) ((REC->dev) & ((1U << 20) -  1))), REC->d
+irty ? "dirty" : "not dirty", REC->wait
+NX609J:/sys/kernel/debug/tracing/events/f2fs/f2fs_sync_fs #
+其中包含4个常字段，其余三个为自定义字段
+
+继续查看f2fs_sync_fs的filter过滤器，此时为none
+NX609J:/sys/kernel/debug/tracing/events/f2fs/f2fs_sync_fs # cat filter
+none
+
+子系统总开关，使能f2fs subsystem中的所有event事件的过滤器
+NX609J:/sys/kernel/debug/tracing/events/f2fs # ls filter
+filter
+
+7、打开tracing_on
+NX609J:/d/tracing # echo 1 > tracing_on
+
+
+
