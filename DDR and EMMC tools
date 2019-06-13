@@ -1,0 +1,112 @@
+@ECHO off 
+
+@ECHO Please get root permission
+rem .\tool\adb wait-for-device
+rem .\tool\adb reboot bootloader
+rem .\tool\fastboot boot boot.img
+rem .\tool\adb wait-for-device
+
+@ECHO ---------------------------------------------------------	
+rem Warning: different vendor firmware version register is different 
+.\tool\adb shell cat /sys/kernel/debug/mmc0/mmc0:0001/ext_csd >ext_csd.txt
+@SET /p ext_csd=<ext_csd.txt
+del ext_csd.txt
+rem @ECHO ext_csd=%ext_csd%
+@SET  /a ext_csd2=%ext_csd:~508,2%
+@ECHO eMMC firmware version= 0x%ext_csd2%
+@ECHO ---------------------------------------------------------
+
+
+
+:restart
+	@ECHO off 
+	@ECHO ---------------------------------------------------------
+	@ECHO     eMMC INFO, Provided by XXXX
+	@ECHO ---------------------------------------------------------
+	@ECHO         Manfid		Vendor
+	@ECHO		0x90		HYNIX
+	@ECHO		0x11		TOSHIBA
+	@ECHO		0X45		SANDISK
+	@ECHO		0X15		SAMSUNG
+	@ECHO		0X13		MICRON
+	@ECHO.		
+	@ECHO ---------------------------------------------------------
+
+@ECHO ---------------------------------------------------------
+.\tool\adb shell cat /proc/meminfo >meminfo.txt
+@SET /p meminfo=<meminfo.txt
+del meminfo.txt
+
+rem MemTotal:        3564284 kB
+@SET  /a meminfo_KB=%meminfo:~9,-3%
+rem @ECHO %meminfo_KB% KB
+
+@SET /a meminfo_MB=%meminfo_KB%/1024
+rem @ECHO %meminfo_MB% MB
+
+@SET /a meminfo_GB=%meminfo_KB%/1024/1024
+rem @ECHO %meminfo_GB% GB
+
+@SET /a meminfo_DDR=%meminfo_GB% + 1
+
+if "%meminfo_GB% * 1024" lss %meminfo_MB% (
+@ECHO DDR Capacity : %meminfo_MB% MB / %meminfo_DDR% GB
+)else @ECHO DDR Capacity : %meminfo_MB% MB / %meminfo_GB% GB
+@ECHO ---------------------------------------------------------	
+	
+
+
+.\tool\adb shell cat /sys/block/mmcblk0/device/name >product_name.txt
+@SET /p product_name=<product_name.txt
+del product_name.txt
+@ECHO eMMC Product Name=(%product_name%)
+
+.\tool\adb shell cat /sys/block/mmcblk0/device/manfid >vendor.txt
+@SET /p vendor=<vendor.txt
+del vendor.txt
+if "%vendor%" == "0x000090" goto HYNIX
+if "%vendor%" == "0x000011" goto TOSHIBA
+if "%vendor%" == "0x000045" goto SANDISK
+if "%vendor%" == "0x000015" goto SAMSUNG
+if "%vendor%" == "0x000013" goto MICRON
+if "%vendor%" == "" goto NO_DEVICE
+
+
+@ECHO eMMC vendor(%vendor%): UNKNOWN
+goto SIZE
+
+:HYNIX
+@ECHO eMMC vendor(%vendor%): HYNIX
+goto SIZE
+:TOSHIBA
+@ECHO eMMC vendor(%vendor%): TOSHIBA
+goto SIZE
+:SANDISK
+@ECHO eMMC vendor(%vendor%): SANDISK
+goto SIZE
+:SAMSUNG
+@ECHO eMMC vendor(%vendor%): SAMSUNG
+goto SIZE
+:MICRON
+@ECHO eMMC vendor(%vendor%): MICRON
+goto SIZE
+:NO_DEVICE
+@ECHO eMMC vendor(%vendor%): NO_DEVICE
+
+:SIZE
+@ECHO ---------------------------------------------------------
+.\tool\adb shell cat /sys/block/mmcblk0/size > size.txt
+@SET /p size=<size.txt
+del size.txt
+@SET /a eMMC_MB=size/2/1024
+@SET /a eMMC_GB=size/2/1024/1024
+@ECHO eMMC Capacity: %eMMC_MB% MB / %eMMC_GB% GB 
+@ECHO ---------------------------------------------------------
+@PAUSE
+@cls
+@SET vendor=
+@SET size=
+@SET size=
+@SET eMMC_MB=
+@SET eMMC_GB=
+goto restart
